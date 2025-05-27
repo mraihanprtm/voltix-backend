@@ -54,8 +54,8 @@ class Perangkat extends Model
     public function ruangan()
     {
         return $this->belongsToMany(Ruangan::class, 'ruangan_perangkat', 'perangkat_id', 'ruangan_id')
-                    ->withPivot('waktu_nyala', 'waktu_mati') // Untuk mengakses kolom tambahan di pivot
-                    ->withTimestamps(); // Jika tabel pivot Anda memiliki timestamps
+                    ->withPivot('waktu_nyala', 'waktu_mati'); // Untuk mengakses kolom tambahan di pivot
+                    // ->withTimestamps(); // Jika tabel pivot Anda memiliki timestamps
     }
 
     /**
