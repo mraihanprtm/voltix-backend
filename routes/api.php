@@ -2,18 +2,23 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+// use App\Http\Controllers\Api\ItemController; // Jika masih digunakan
+use App\Http\Controllers\Api\UserController; // Atau AuthController
+use App\Http\Controllers\Api\RuanganController; // Import RuanganController
 
 /*
 |--------------------------------------------------------------------------
 | API Routes
 |--------------------------------------------------------------------------
-|
-| Here is where you can register API routes for your application. These
-| routes are loaded by the RouteServiceProvider and all of them will
-| be assigned to the "api" middleware group. Make something great!
-|
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
+Route::middleware('auth.firebase')->group(function () {
+    // Route::apiResource('items', ItemController::class);
+
+    Route::match(['GET', 'POST'], '/auth/user/sync', [UserController::class, 'syncOrGetCurrentUser'])->name('auth.user.sync');
+    
+    // Rute untuk Ruangan Resource
+    Route::apiResource('ruangan', RuanganController::class);
+
+    // Rute untuk fitur lain (Perangkat, Simulasi, dll.) akan ditambahkan di sini
 });
