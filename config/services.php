@@ -31,4 +31,9 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    // config/services.php
+    'firebase' => [
+        'credentials_path' => storage_path('app/voltixapp-firebase.json'),
+    ],
+
 ];

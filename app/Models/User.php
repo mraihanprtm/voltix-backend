@@ -2,50 +2,38 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
+// use Illuminate\Contracts\Auth\MustVerifyEmail; // Biarkan ini jika tidak dipakai
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-// use Laravel\Sanctum\HasApiTokens; // Jika Anda menggunakan Sanctum untuk jenis token lain
+use Laravel\Sanctum\HasApiTokens; // <--- PENTING: UNCOMMENT BARIS INI
 
 class User extends Authenticatable // implements MustVerifyEmail (jika Anda ingin fitur verifikasi email Laravel)
 {
-    use HasFactory, Notifiable; // HasApiTokens (jika menggunakan Sanctum)
+    use HasApiTokens, HasFactory, Notifiable; // <--- PENTING: UNCOMMENT DAN TAMBAHKAN HasApiTokens DI SINI
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
     protected $fillable = [
-        'firebase_uid',
+        'firebase_uid', // Pastikan nama kolom ini sama dengan di Supabase & migrasi Anda
         'name',
         'email',
+        'email_verified_at', // Jika Anda menyimpan ini sebagai timestamp
+        // atau 'email_verified' jika boolean (sesuaikan juga $casts)
         'jenis_listrik',
         'foto_profil',
-        'email_verified_at', // Jika Anda menyimpannya dari Firebase
+        'is_prabayar', // <-- TAMBAHKAN INI
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     * Ini penting agar password (jika ada) dan remember_token tidak ikut terkirim dalam respons API.
-     *
-     * @var array<int, string>
-     */
     protected $hidden = [
-        // 'password', // Kita tidak menggunakan password Laravel
-        'remember_token',
+        // 'password', // Tidak ada password Laravel
+        'remember_token', // Atau 'remember_tol' jika itu nama kolom Anda
     ];
 
-    /**
-     * The attributes that should be cast.
-     *
-     * @var array<string, string>
-     */
     protected $casts = [
-        'email_verified_at' => 'datetime',
-        // 'password' => 'hashed', // Tidak digunakan
+        'email_verified_at' => 'datetime', // Jika email_verified_at adalah timestamp
+        // 'email_verified' => 'boolean', // Jika email_verified adalah boolean
         'jenis_listrik' => 'integer',
+        'is_prabayar' => 'boolean', // <-- PERBAIKI MENJADI INI
+        // 'password' => 'hashed', // Tidak ada password Laravel
     ];
 
     /**
@@ -58,18 +46,9 @@ class User extends Authenticatable // implements MustVerifyEmail (jika Anda ingi
     {
         // Asumsi: tabel 'ruangans' memiliki kolom 'user_id' yang menyimpan 'firebase_uid' dari tabel 'users'.
         // Jika 'user_id' di 'ruangans' merujuk ke 'id' (PK) di 'users', maka cukup: return $this->hasMany(Ruangan::class);
-        return $this->hasMany(Ruangan::class, 'user_id', 'firebase_uid');
+        // Ini adalah poin KRITIS, kita perlu konfirmasi ini.
+        return $this->hasMany(Ruangan::class, 'user_id', 'firebase_uid'); // <--- PERHATIAN DI SINI
     }
-
-    /**
-     * Mendefinisikan relasi "hasMany" ke model Item (jika Anda mengadaptasi tabel 'items' untuk Voltix).
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
-    // public function items()
-    // {
-    //     return $this->hasMany(Item::class, 'user_id', 'firebase_uid');
-    // }
 
     /**
      * Mendefinisikan relasi "hasMany" ke model Simulation.
@@ -78,7 +57,8 @@ class User extends Authenticatable // implements MustVerifyEmail (jika Anda ingi
      */
     public function simulation()
     {
-        return $this->hasMany(Simulation::class, 'user_id', 'firebase_uid');
+        // Ini juga poin KRITIS
+        return $this->hasMany(Simulation::class, 'user_id', 'firebase_uid'); // <--- PERHATIAN DI SINI
     }
 
     /**
@@ -88,13 +68,7 @@ class User extends Authenticatable // implements MustVerifyEmail (jika Anda ingi
      */
     public function rekomendasiPenghematanLampu()
     {
-        return $this->hasMany(RekomendasiPenghematanLampu::class, 'user_id', 'firebase_uid');
+        // Dan ini juga poin KRITIS
+        return $this->hasMany(RekomendasiPenghematanLampu::class, 'user_id', 'firebase_uid'); // <--- PERHATIAN DI SINI
     }
-
-    // Jika Anda memiliki tabel 'perangkats' yang secara langsung dimiliki oleh user
-    // (selain melalui ruangan), Anda bisa menambahkan relasi di sini.
-    // public function perangkats()
-    // {
-    //     return $this->hasMany(Perangkat::class, 'user_id', 'firebase_uid');
-    // }
 }
