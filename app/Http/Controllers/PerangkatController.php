@@ -60,6 +60,7 @@ class PerangkatController extends Controller
             'jumlah' => $request->jumlah,
             'daya' => $request->daya,
             'jenis' => $request->jenis, // Misalnya, jika jenis perangkat adalah string
+            'uuid' => $request->uuid, // Jika UUID tidak diberikan, buat baru
         ]);
 
         // if jenis perangkat adalah lampu, buat relasi dengan tabel lampu
@@ -119,7 +120,8 @@ class PerangkatController extends Controller
             'nama' => 'sometimes|required|string|max:255',
             'jumlah' => 'sometimes|required|integer|min:1',
             'daya' => 'sometimes|required|integer|min:0',
-            'jenis' => 'sometimes|required|string|max:50', // Misalnya, jika jenis perangkat adalah string
+            'jenis' => 'sometimes|required|string|max:50', 
+            'uuid' => 'sometimes|required|string|uuid',
         ]);
 
         // Update perangkat
