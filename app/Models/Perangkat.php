@@ -21,6 +21,7 @@ class Perangkat extends Model
 
     protected $fillable = [
         'user_id', // Firebase UID pemilik (jika perangkat dimiliki langsung oleh user)
+        'uuid',
         'nama',
         'jumlah',
         'daya',

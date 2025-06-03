@@ -38,10 +38,10 @@ class RuanganController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            'nama_ruangan' => 'required|string|max:255',
-            'panjang_ruangan' => 'required|numeric|min:0',
-            'lebar_ruangan' => 'required|numeric|min:0',
-            'jenis_ruangan' => 'required|string|max:50', // Misalnya, jika jenis ruangan adalah string
+            'namaRuangan' => 'required|string|max:255',
+            'panjangRuangan' => 'required|numeric|min:0',
+            'lebarRuangan' => 'required|numeric|min:0',
+            'jenisRuangan' => 'required|string|max:50', // Misalnya, jika jenis ruangan adalah string
         ]);
 
         if ($validator->fails()) {
@@ -50,10 +50,11 @@ class RuanganController extends Controller
 
         $ruangan = Ruangan::create([
             'user_id' => $firebaseUid,
-            'nama_ruangan' => $request->nama_ruangan,
-            'panjang_ruangan' => $request->panjang_ruangan,
-            'lebar_ruangan' => $request->lebar_ruangan,
-            'jenis_ruangan' => $request->jenis_ruangan, // Misalnya, jika jenis ruangan adalah string
+            'namaRuangan' => $request->namaRuangan,
+            'panjangRuangan' => $request->panjangRuangan,
+            'lebarRuangan' => $request->lebarRuangan,
+            'jenisRuangan' => $request->jenisRuangan, // Misalnya, jika jenis ruangan adalah string
+            'uuid' => $request->uuid, // Pastikan UUID disediakan atau dihasilkan
         ]);
         return response()->json($ruangan, 201);
     }
@@ -82,17 +83,18 @@ class RuanganController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            'nama_ruangan' => 'sometimes|required|string|max:255',
-            'panjang_ruangan' => 'sometimes|required|numeric|min:0',
-            'lebar_ruangan' => 'sometimes|required|numeric|min:0',
-            'jenis_ruangan' => 'sometimes|required|string|max:50', // Misalnya, jika jenis ruangan adalah string
+            'namaRuangan' => 'sometimes|required|string|max:255',
+            'panjangRuangan' => 'sometimes|required|numeric|min:0',
+            'lebarRuangan' => 'sometimes|required|numeric|min:0',
+            'jenisRuangan' => 'sometimes|required|string|max:50', // Misalnya, jika jenis ruangan adalah string
+            'uuid' => 'sometimes|required|string|uuid', // Pastikan UUID valid jika disediakan
         ]);
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        $ruangan->update($request->only(['nama_ruangan', 'panjang_ruangan', 'lebar_ruangan', 'jenis_ruangan']));
+        $ruangan->update($request->only(['namaRuangan', 'panjangRuangan', 'lebarRuangan', 'jenisRuangan']));
         return response()->json($ruangan);
     }
 

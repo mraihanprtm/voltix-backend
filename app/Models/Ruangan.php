@@ -24,10 +24,11 @@ class Ruangan extends Model
 
     protected $fillable = [
         'user_id',          // Firebase UID pemilik ruangan
-        'nama_ruangan',
-        'panjang_ruangan',
-        'lebar_ruangan',
-        'jenis_ruangan',    // Akan disimpan sebagai string (nama enum dari Android)
+        'namaRuangan',
+        'panjangRuangan',
+        'lebarRuangan',
+        'jenisRuangan',    // Akan disimpan sebagai string (nama enum dari Android)
+        'uuid'
     ];
 
     protected $casts = [
