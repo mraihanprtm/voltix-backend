@@ -33,7 +33,7 @@ return [
 
     // config/services.php
     'firebase' => [
-        'credentials_path' => storage_path('app/voltixapp-firebase.json'),
+        'credentials_path' => storage_path('app/voltixapp-1-firebase-adminsdk-fbsvc-c0179f4261.json'),
     ],
 
 ];
