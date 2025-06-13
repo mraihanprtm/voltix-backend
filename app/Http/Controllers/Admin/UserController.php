@@ -29,4 +29,17 @@ class UserController extends Controller
         // Arahkan kembali ke dashboard dengan pesan sukses
         return redirect()->route('admin.dashboard')->with('success', 'User updated successfully!');
     }
+
+    public function destroy(User $user)
+    {
+        if (auth()->id() === $user->id) {
+            return redirect()->route('admin.dashboard')->with('error', 'You cannot delete your own account.');
+        }
+
+        // Hapus user dari database
+        $user->delete();
+
+        // Arahkan kembali ke dashboard dengan pesan sukses
+        return redirect()->route('admin.dashboard')->with('success', 'User has been deleted successfully.');
+    }
 }
