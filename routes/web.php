@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\File;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\UserController;
 use App\Http\Middleware\IsAdmin;
 
 /*
@@ -21,8 +22,10 @@ Route::middleware(['auth', IsAdmin::class])->prefix('admin')->name('admin.')->gr
     
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-});
+    Route::get('/users/{user}/edit', [UserController::class, 'edit'])->name('users.edit');
+    Route::put('/users/{user}', [UserController::class, 'update'])->name('users.update');
 
+});
 
 // RUTE CATCH-ALL UNTUK SPA (FRONTEND WEB)
 Route::get('/{any?}', function () {
