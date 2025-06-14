@@ -8,6 +8,23 @@ use App\Models\User;
 
 class UserController extends Controller
 {
+    public function index(Request $request)
+    {
+        $query = User::query();
+
+        if ($request->has('search')) {
+            $searchTerm = $request->input('search');
+            $query->where(function($q) use ($searchTerm) {
+                $q->where('name', 'like', '%' . $searchTerm . '%')
+                  ->orWhere('email', 'like', '%' . $searchTerm . '%');
+            });
+        }
+
+        $users = $query->latest()->paginate(10);
+
+        return view('admin.users.index', ['users' => $users]);
+    }
+
     public function edit(User $user)
     {
         return view('admin.users.edit', ['user' => $user]);
@@ -15,31 +32,29 @@ class UserController extends Controller
 
     public function update(Request $request, User $user)
     {
-        // Validasi data yang masuk
         $request->validate([
             'name' => 'required|string|max:255',
             'role' => 'required|string|in:admin,user',
         ]);
 
-        // Update data user
         $user->name = $request->name;
         $user->role = $request->role;
         $user->save();
 
-        // Arahkan kembali ke dashboard dengan pesan sukses
-        return redirect()->route('admin.dashboard')->with('success', 'User updated successfully!');
+        // PERBAIKI BARIS INI
+        return redirect()->route('admin.users.index')->with('success', 'User updated successfully!');
     }
 
     public function destroy(User $user)
     {
         if (auth()->id() === $user->id) {
-            return redirect()->route('admin.dashboard')->with('error', 'You cannot delete your own account.');
+            // PERBAIKI BARIS INI
+            return redirect()->route('admin.users.index')->with('error', 'You cannot delete your own account.');
         }
 
-        // Hapus user dari database
         $user->delete();
 
-        // Arahkan kembali ke dashboard dengan pesan sukses
-        return redirect()->route('admin.dashboard')->with('success', 'User has been deleted successfully.');
+        // PERBAIKI BARIS INI JUGA
+        return redirect()->route('admin.users.index')->with('success', 'User has been deleted successfully.');
     }
 }
