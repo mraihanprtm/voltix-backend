@@ -21,7 +21,14 @@ class RedirectIfAuthenticated
 
         foreach ($guards as $guard) {
             if (Auth::guard($guard)->check()) {
-                return redirect(RouteServiceProvider::HOME);
+                // Jika yang sudah login adalah seorang admin, arahkan ke dashboard admin
+                if (Auth::user()->role === 'admin') {
+                    return redirect('/admin/dashboard');
+                }
+
+                // Untuk user biasa, 
+                // bisa diarahkan ke halaman utama SPA.
+                return redirect('/'); 
             }
         }
 
