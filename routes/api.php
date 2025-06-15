@@ -6,6 +6,7 @@ use App\Http\Controllers\RuanganController;
 use App\Http\Controllers\PerangkatController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\UserController;
+use App\Http\Controllers\Api\SyncController;
 
 // Rute untuk login/register awal (yang menghasilkan token Sanctum)
 Route::post('/v1/auth/firebase-login-or-register', [AuthController::class, 'handleFirebaseLoginOrRegister']);
@@ -34,6 +35,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/ruangan/{ruangan}', [RuanganController::class, 'update']);
     // Route untuk menghapus ruangan tertentu
     Route::delete('/ruangan/{ruangan}', [RuanganController::class, 'destroy']);
+    Route::post('/sync', [SyncController::class, 'syncData']);
 // });
 
 Route::apiResource('perangkat', PerangkatController::class);

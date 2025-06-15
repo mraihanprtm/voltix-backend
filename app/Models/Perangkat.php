@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 // Jika Anda membuat Enum PHP untuk jenis perangkat:
 // namespace App\Enums;
@@ -15,7 +16,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Perangkat extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $table = 'perangkat';
 
@@ -29,10 +30,12 @@ class Perangkat extends Model
     ];
 
     protected $casts = [
+        'id' => 'integer',
+        'user_id' => 'string', // Assuming user_id in DB is integer
         'jumlah' => 'integer',
         'daya' => 'integer',
-        // Jika menggunakan Enum PHP 8.1+ untuk jenis:
-        // 'jenis' => JenisPerangkatEnum::class,
+        'isDeleted' => 'boolean', // For the accessor
+        'lastModified' => 'timestamp', // To cast updated_at to a specific format if needed, usually not necessary for epoch
     ];
 
     /**
@@ -46,6 +49,34 @@ class Perangkat extends Model
     //     // dan merujuk ke kolom 'firebase_uid' di tabel 'users'.
     //     return $this->belongsTo(User::class, 'user_id', 'firebase_uid');
     // }
+
+    /**
+     * The accessors to append to the model's array form.
+     */
+    protected $appends = ['isDeleted', 'lastModified'];
+
+    /**
+     * Accessor for the 'isDeleted' attribute.
+     * Matches the Kotlin PerangkatEntity's isDeleted field.
+     *
+     * @return bool
+     */
+    public function getIsDeletedAttribute()
+    {
+        return $this->deleted_at !== null;
+    }
+
+    /**
+     * Accessor for the 'lastModified' attribute.
+     * Matches the Kotlin PerangkatEntity's lastModified field (expects milliseconds).
+     * Laravel's updated_at is a Carbon instance.
+     *
+     * @return int|null
+     */
+    public function getLastModifiedAttribute()
+    {
+        return $this->updated_at ? $this->updated_at->getTimestamp() * 1000 : null;
+    }
 
     /**
      * Mendefinisikan relasi many-to-many ke model Ruangan melalui tabel pivot 'ruangan_perangkat'.

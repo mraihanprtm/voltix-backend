@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 // Import enum JenisRuangan dari aplikasi Android jika Anda ingin mereplikasinya di PHP.
 // Atau, Anda bisa menggunakan string biasa dan melakukan validasi di tempat lain.
@@ -18,7 +19,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Ruangan extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $table = 'ruangan'; // Eksplisit jika nama tabel berbeda dari konvensi
 
@@ -32,11 +33,25 @@ class Ruangan extends Model
     ];
 
     protected $casts = [
-        'panjang_ruangan' => 'float',
-        'lebar_ruangan' => 'float',
-        // Jika Anda menggunakan Enum PHP 8.1+ untuk jenis_ruangan:
-        // 'jenis_ruangan' => \App\Enums\JenisRuanganEnum::class, // Contoh jika Anda membuat Enum PHP
+        'id' => 'integer',
+        'user_id' => 'string',
+        'panjangRuangan' => 'float',
+        'lebarRuangan' => 'float',
+        'isDeleted' => 'boolean',
+        'lastModified' => 'timestamp',
     ];
+
+    protected $appends = ['isDeleted', 'lastModified'];
+
+    public function getIsDeletedAttribute()
+    {
+        return $this->deleted_at !== null;
+    }
+
+    public function getLastModifiedAttribute()
+    {
+        return $this->updated_at ? $this->updated_at->getTimestamp() * 1000 : null;
+    }
 
     /**
      * Mendefinisikan relasi "belongsTo" ke model User.

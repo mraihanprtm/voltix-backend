@@ -8,6 +8,7 @@ use App\Models\Lampu; // Jika Anda menggunakan model Lampu
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule; // Untuk validasi enum jika diperlukan
 use App\Models\Ruangan; // Jika Anda menggunakan model Ruangan
+use Carbon\Carbon;
 
 class PerangkatController extends Controller
 {
@@ -85,7 +86,7 @@ class PerangkatController extends Controller
 
         // Jika Anda ingin mengembalikan detail lampu bersama perangkat
         $perangkat->load('lampuDetail'); // Jika Anda memiliki relasi 'lampu' di model Perangkat
-        // Kembalikan perangkat yang baru dibuat    
+        // Kembalikan perangkat yang baru dibuat
         return response()->json($perangkat, 201);
     }
 
@@ -120,7 +121,7 @@ class PerangkatController extends Controller
             'nama' => 'sometimes|required|string|max:255',
             'jumlah' => 'sometimes|required|integer|min:1',
             'daya' => 'sometimes|required|integer|min:0',
-            'jenis' => 'sometimes|required|string|max:50', 
+            'jenis' => 'sometimes|required|string|max:50',
             'uuid' => 'sometimes|required|string|uuid',
         ]);
 
@@ -196,6 +197,7 @@ class PerangkatController extends Controller
         $perangkat->ruangan()->attach($request->ruangan_id, [
             'waktu_nyala' => $request->waktu_nyala,
             'waktu_mati' => $request->waktu_mati,
+            'updated_at' => Carbon::now(),
         ]);
 
         return response()->json(['message' => 'Perangkat attached to Ruangan successfully']);
