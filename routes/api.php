@@ -3,12 +3,10 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\RuanganController;
-use App\Http\Controllers\PerangkatController;
-use App\Http\Controllers\RuanganController;
-use App\Http\Controllers\PerangkatController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\UserController;
 use App\Http\Controllers\Api\SyncController;
+use App\Http\Controllers\PerangkatController;
 
 // Rute untuk login/register awal (yang menghasilkan token Sanctum)
 Route::post('/v1/auth/firebase-login-or-register', [AuthController::class, 'handleFirebaseLoginOrRegister']);
