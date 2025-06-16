@@ -24,6 +24,7 @@ class Lampu extends Model
         'perangkat_id', // Foreign key ke tabel perangkats
         'jenis',        // Akan disimpan sebagai string (nama enum jenisLampu dari Android)
         'lumen',
+        'uuid',
     ];
 
     protected $casts = [

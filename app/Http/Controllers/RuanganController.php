@@ -6,57 +6,47 @@ use App\Models\Ruangan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Models\Perangkat; // Jika Anda menggunakan model Perangkat
+use Illuminate\Support\Str; // CHANGED: Import Str for UUID generation
+use App\Http\Resources\RuanganResource; // CHANGED: Import the API Resource
 
 class RuanganController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        // $firebaseUid = auth()->user()->firebase_uid; // Ambil Firebase UID dari user yang sedang login
         $firebaseUid = "CUQHiYo3yvhbsAFK8fi16atLmwB3";
-        // error handling jika tidak ada Firebase UID
         if (!$firebaseUid) {
             return response()->json(['error' => 'Unauthorized'], 401);
         }
-        $ruangan = Ruangan::where('user_id', $firebaseUid)->get(); // Ambil semua ruangan milik user
-        return response()->json($ruangan);
+        $ruangan = Ruangan::where('user_id', 'like', $firebaseUid)->get();
+
+        // CHANGED: Use an API Resource for consistent output
+        return RuanganResource::collection($ruangan);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        //get Firebase UID dari user yang sedang login
-        // $firebaseUid = auth()->user()->firebase_uid;
-        $firebaseUid = "CUQHiYo3yvhbsAFK8fi16atLmwB3"; // Contoh Firebase UID, ganti dengan yang sesuai
-        
+        $firebaseUid = "CUQHiYo3yvhbsAFK8fi16atLmwB3";
         if(!$firebaseUid) {
             return response()->json(['error' => 'Unauthorized'], 401);
         }
 
-        $validator = Validator::make($request->all(), [
-            'namaRuangan' => 'required|string|max:255',
-            'panjangRuangan' => 'required|numeric|min:0',
-            'lebarRuangan' => 'required|numeric|min:0',
-            'jenisRuangan' => 'required|string|max:50', // Misalnya, jika jenis ruangan adalah string
+        // CHANGED: Validation now uses snake_case and Laravel's built-in validation
+        $validated = $request->validate([
+            'nama_ruangan' => 'required|string|max:255',
+            'panjang_ruangan' => 'required|numeric|min:0',
+            'lebar_ruangan' => 'required|numeric|min:0',
+            'jenis_ruangan' => 'required|string|max:50',
+            'uuid' => 'nullable|uuid',
         ]);
 
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
+        // CHANGED: Automatically generate a UUID if one isn't provided
+        $validated['uuid'] = $validated['uuid'] ?? Str::uuid()->toString();
+        $validated['user_id'] = $firebaseUid;
 
-        $ruangan = Ruangan::create([
-            'user_id' => $firebaseUid,
-            'namaRuangan' => $request->namaRuangan,
-            'panjangRuangan' => $request->panjangRuangan,
-            'lebarRuangan' => $request->lebarRuangan,
-            'jenisRuangan' => $request->jenisRuangan, // Misalnya, jika jenis ruangan adalah string
-            'uuid' => $request->uuid, // Pastikan UUID disediakan atau dihasilkan
-        ]);
-        return response()->json($ruangan, 201);
+        $ruangan = Ruangan::create($validated);
+
+        // CHANGED: Use the API Resource for the response
+        return new RuanganResource($ruangan);
     }
 
     /**
@@ -69,7 +59,7 @@ class RuanganController extends Controller
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
-        return response()->json($ruangan);
+        return new RuanganResource($ruangan);
     }
 
     /**
@@ -82,20 +72,16 @@ class RuanganController extends Controller
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
-        $validator = Validator::make($request->all(), [
-            'namaRuangan' => 'sometimes|required|string|max:255',
-            'panjangRuangan' => 'sometimes|required|numeric|min:0',
-            'lebarRuangan' => 'sometimes|required|numeric|min:0',
-            'jenisRuangan' => 'sometimes|required|string|max:50', // Misalnya, jika jenis ruangan adalah string
-            'uuid' => 'sometimes|required|string|uuid', // Pastikan UUID valid jika disediakan
+        $validated = $request->validate([
+            'nama_ruangan' => 'sometimes|required|string|max:255',
+            'panjang_ruangan' => 'sometimes|required|numeric|min:0',
+            'lebar_ruangan' => 'sometimes|required|numeric|min:0',
+            'jenis_ruangan' => 'sometimes|required|string|max:50',
         ]);
 
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
+        $ruangan->update($validated);
 
-        $ruangan->update($request->only(['namaRuangan', 'panjangRuangan', 'lebarRuangan', 'jenisRuangan']));
-        return response()->json($ruangan);
+        return new RuanganResource($ruangan);
     }
 
     /**

@@ -22,6 +22,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/v1/user/profile', [UserController::class, 'updateProfile']);
 
     // ... rute lain yang terproteksi ...
+
+    Route::post('/sync', [SyncController::class, 'syncData']);
+    Route::post('/push-changes', [SyncController::class, 'pushChanges']);
 });
 // Route untuk mendapatkan semua ruangan milik user
 // Route::middleware('auth:sanctum')->group(function () {
@@ -35,7 +38,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/ruangan/{ruangan}', [RuanganController::class, 'update']);
     // Route untuk menghapus ruangan tertentu
     Route::delete('/ruangan/{ruangan}', [RuanganController::class, 'destroy']);
-    Route::post('/sync', [SyncController::class, 'syncData']);
+    // Route::post('/sync', [SyncController::class, 'syncData']);
+    // Route::post('/push-changes', [SyncController::class, 'pushChanges']);
 // });
 
 Route::apiResource('perangkat', PerangkatController::class);

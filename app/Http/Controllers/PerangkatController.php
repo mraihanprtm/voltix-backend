@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule; // Untuk validasi enum jika diperlukan
 use App\Models\Ruangan; // Jika Anda menggunakan model Ruangan
 use Carbon\Carbon;
+use App\Http\Resources\PerangkatResource;
+use Illuminate\Support\Str;
 
 class PerangkatController extends Controller
 {
@@ -17,78 +19,59 @@ class PerangkatController extends Controller
      */
     public function index()
     {
-        // Ambil Firebase UID dari user yang sedang login
-        // $firebaseUid = auth()->user()->firebase_uid ?? null;
-        $firebaseUid = "CUQHiYo3yvhbsAFK8fi16atLmwB3"; // Contoh Firebase UID, ganti dengan yang sesuai
-
-        // Error handling jika tidak ada Firebase UID
+        $firebaseUid = "CUQHiYo3yvhbsAFK8fi16atLmwB3";
         if (!$firebaseUid) {
             return response()->json(['error' => 'Unauthorized'], 401);
         }
 
-        // Ambil semua perangkat milik user
-        $perangkat = Perangkat::where('user_id', $firebaseUid)->get();
+        $perangkat = Perangkat::where('user_id', 'like', $firebaseUid)->get();
 
-        return response()->json($perangkat);
+        // CHANGED: Use an API Resource for consistent output
+        return PerangkatResource::collection($perangkat);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        // Ambil Firebase UID dari user yang sedang login
-        // $firebaseUid = auth()->user()->firebase_uid ?? null;
         $firebaseUid = "CUQHiYo3yvhbsAFK8fi16atLmwB3";
-
-        // Error handling jika tidak ada Firebase UID
         if (!$firebaseUid) {
             return response()->json(['error' => 'Unauthorized'], 401);
         }
 
-        // Validasi input
-        $request->validate([
+        // CHANGED: Validation now uses snake_case for consistency
+        $validated = $request->validate([
             'nama' => 'required|string|max:255',
             'jumlah' => 'required|integer|min:1',
             'daya' => 'required|integer|min:0',
-            'jenis' => 'required|string|max:50', // Misalnya, jika jenis perangkat adalah string
+            'jenis' => 'required|string|max:50',
+            'uuid' => 'nullable|uuid', // UUID is optional, we can generate it
         ]);
 
-        // Buat perangkat baru
-        $perangkat = Perangkat::create([
-            'user_id' => $firebaseUid,
-            'nama' => $request->nama,
-            'jumlah' => $request->jumlah,
-            'daya' => $request->daya,
-            'jenis' => $request->jenis, // Misalnya, jika jenis perangkat adalah string
-            'uuid' => $request->uuid, // Jika UUID tidak diberikan, buat baru
-        ]);
+        // CHANGED: Automatically generate a UUID if one isn't provided
+        $validated['uuid'] = $validated['uuid'] ?? Str::uuid()->toString();
+        $validated['user_id'] = $firebaseUid;
 
-        // if jenis perangkat adalah lampu, buat relasi dengan tabel lampu
-        if ($request->jenis === 'Lampu') {
-            // Validasi tambahan untuk lampu
-            $request->validate([
+        $perangkat = Perangkat::create($validated);
+
+        // This logic remains, but could be refactored into its own LampuController later
+        if ($validated['jenis'] === 'Lampu') {
+            $lampuValidated = $request->validate([
                 'lumen' => 'required|integer|min:0',
-                'jenisLampu' => [
-                    'required',
-                    'string',
-                    Rule::in(['Neon', 'LED']), // Misalnya, jika jenis lampu adalah enum
-                ],
+                'jenis_lampu' => ['required', 'string', Rule::in(['Neon', 'LED'])],
+                'lampu_uuid' => 'nullable|uuid' // Expect a UUID for the lamp too
             ]);
 
-            // Buat detail lampu
-            $lampu = Lampu::create([
+            Lampu::create([
                 'perangkat_id' => $perangkat->id,
-                'jenis' => $request->jenisLampu, // Misalnya, jika jenis lampu adalah string
-                'lumen' => $request->lumen,
+                'jenis' => $lampuValidated['jenis_lampu'],
+                'lumen' => $lampuValidated['lumen'],
+                'uuid' => $lampuValidated['lampu_uuid'] ?? Str::uuid()->toString(),
             ]);
         }
 
-        // Jika Anda ingin mengembalikan detail lampu bersama perangkat
-        $perangkat->load('lampuDetail'); // Jika Anda memiliki relasi 'lampu' di model Perangkat
-        // Kembalikan perangkat yang baru dibuat
-        return response()->json($perangkat, 201);
+        // CHANGED: Use the API Resource for the response
+        return new PerangkatResource($perangkat->load('lampuDetail'));
     }
+
 
     /**
      * Display the specified resource.
@@ -101,9 +84,7 @@ class PerangkatController extends Controller
         // }
 
         // Ambil detail perangkat, termasuk relasi dengan lampu jika ada
-        $perangkat->load('lampuDetail'); // Jika Anda memiliki relasi 'lampu' di model Perangkat
-
-        return response()->json($perangkat);
+        return new PerangkatResource($perangkat->load('lampuDetail'));
     }
 
     /**
@@ -117,40 +98,27 @@ class PerangkatController extends Controller
         // }
 
         // Validasi input
-        $request->validate([
+        $validated = $request->validate([
             'nama' => 'sometimes|required|string|max:255',
             'jumlah' => 'sometimes|required|integer|min:1',
             'daya' => 'sometimes|required|integer|min:0',
             'jenis' => 'sometimes|required|string|max:50',
-            'uuid' => 'sometimes|required|string|uuid',
         ]);
 
-        // Update perangkat
-        $perangkat->update($request->only(['nama', 'jumlah', 'daya', 'jenis']));
+        $perangkat->update($validated);
 
-        // Jika jenis perangkat adalah lampu, update relasi dengan tabel lampu
-        if ($perangkat->jenis === 'Lampu') {
-            $request->validate([
-                'lumen' => 'sometimes|required|integer|min:0',
-                'jenisLampu' => [
-                    'sometimes',
-                    'required',
-                    'string',
-                    Rule::in(['Neon', 'LED']), // Misalnya, jika jenis lampu adalah enum
-                ],
+        if ($perangkat->jenis === 'Lampu' && $request->hasAny(['lumen', 'jenis_lampu'])) {
+            $lampuValidated = $request->validate([
+                 'lumen' => 'sometimes|required|integer|min:0',
+                 'jenis_lampu' => ['sometimes','required', 'string', Rule::in(['Neon', 'LED'])],
             ]);
-
-            // Update detail lampu jika ada
-            $lampu = $perangkat->lampu; // Ambil relasi lampu jika ada
-            if ($lampu) {
-                $lampu->update([
-                    'jenis' => $request->jenisLampu,
-                    'lumen' => $request->lumen,
-                ]);
+            if ($perangkat->lampuDetail) {
+                $perangkat->lampuDetail->update($lampuValidated);
             }
         }
 
-        return response()->json($perangkat);
+        // CHANGED: Use the API Resource for the response
+        return new PerangkatResource($perangkat->load('lampuDetail'));
     }
 
     /**

@@ -24,12 +24,13 @@ class Ruangan extends Model
     protected $table = 'ruangan'; // Eksplisit jika nama tabel berbeda dari konvensi
 
     protected $fillable = [
-        'user_id',          // Firebase UID pemilik ruangan
-        'namaRuangan',
-        'panjangRuangan',
-        'lebarRuangan',
-        'jenisRuangan',    // Akan disimpan sebagai string (nama enum dari Android)
-        'uuid'
+        'user_id',
+        'nama_ruangan',    // MUST be snake_case, NOT namaRuangan
+        'panjang_ruangan', // MUST be snake_case, NOT panjangRuangan
+        'lebar_ruangan',   // MUST be snake_case, NOT lebarRuangan
+        'jenis_ruangan',   // MUST be snake_case, NOT jenisRuangan
+        'uuid',
+        'updated_at',
     ];
 
     protected $casts = [
@@ -95,4 +96,14 @@ class Ruangan extends Model
     // {
     //     return $this->hasMany(Simulation::class);
     // }
+
+    /**
+     * Get the route key for the model.
+     *
+     * @return string
+     */
+    public function getRouteKeyName()
+    {
+        return 'uuid';
+    }
 }
