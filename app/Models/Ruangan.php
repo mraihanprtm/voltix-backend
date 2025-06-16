@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 // Import enum JenisRuangan dari aplikasi Android jika Anda ingin mereplikasinya di PHP.
 // Atau, Anda bisa menggunakan string biasa dan melakukan validasi di tempat lain.
@@ -18,24 +19,40 @@ use Illuminate\Database\Eloquent\Model;
 
 class Ruangan extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $table = 'ruangan'; // Eksplisit jika nama tabel berbeda dari konvensi
 
     protected $fillable = [
-        'user_id',          // Firebase UID pemilik ruangan
-        'nama_ruangan',
-        'panjang_ruangan',
-        'lebar_ruangan',
-        'jenis_ruangan',    // Akan disimpan sebagai string (nama enum dari Android)
+        'user_id',
+        'nama_ruangan',    // MUST be snake_case, NOT namaRuangan
+        'panjang_ruangan', // MUST be snake_case, NOT panjangRuangan
+        'lebar_ruangan',   // MUST be snake_case, NOT lebarRuangan
+        'jenis_ruangan',   // MUST be snake_case, NOT jenisRuangan
+        'uuid',
+        'updated_at',
     ];
 
     protected $casts = [
-        'panjang_ruangan' => 'float',
-        'lebar_ruangan' => 'float',
-        // Jika Anda menggunakan Enum PHP 8.1+ untuk jenis_ruangan:
-        // 'jenis_ruangan' => \App\Enums\JenisRuanganEnum::class, // Contoh jika Anda membuat Enum PHP
+        'id' => 'integer',
+        'user_id' => 'string',
+        'panjangRuangan' => 'float',
+        'lebarRuangan' => 'float',
+        'isDeleted' => 'boolean',
+        'lastModified' => 'timestamp',
     ];
+
+    protected $appends = ['isDeleted', 'lastModified'];
+
+    public function getIsDeletedAttribute()
+    {
+        return $this->deleted_at !== null;
+    }
+
+    public function getLastModifiedAttribute()
+    {
+        return $this->updated_at ? $this->updated_at->getTimestamp() * 1000 : null;
+    }
 
     /**
      * Mendefinisikan relasi "belongsTo" ke model User.
@@ -59,8 +76,8 @@ class Ruangan extends Model
     public function perangkat()
     {
         return $this->belongsToMany(Perangkat::class, 'ruangan_perangkat', 'ruangan_id', 'perangkat_id')
-                    ->withPivot('waktu_nyala', 'waktu_mati') // Untuk mengakses kolom tambahan di pivot
-                    ->withTimestamps(); // Jika tabel pivot Anda memiliki timestamps (opsional)
+                    ->withPivot('waktu_nyala', 'waktu_mati'); // Untuk mengakses kolom tambahan di pivot
+                    // ->withTimestamps(); // Jika tabel pivot Anda memiliki timestamps (opsional)
     }
 
     /**
@@ -79,4 +96,14 @@ class Ruangan extends Model
     // {
     //     return $this->hasMany(Simulation::class);
     // }
+
+    /**
+     * Get the route key for the model.
+     *
+     * @return string
+     */
+    public function getRouteKeyName()
+    {
+        return 'uuid';
+    }
 }

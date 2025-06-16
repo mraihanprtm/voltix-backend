@@ -21,7 +21,7 @@ return new class extends Migration
             // Untuk konsistensi dan fleksibilitas, seringkali baik untuk menambahkannya.
             $table->string('user_id')->nullable()->comment('Firebase UID pemilik perangkat, jika relevan. Nullable jika perangkat bisa global.');
             $table->index('user_id');
-
+            $table->string('uuid')->unique()->comment('UUID unik untuk perangkat, digunakan untuk identifikasi global.');
             $table->string('nama');
             $table->integer('jumlah')->default(1);
             $table->integer('daya')->comment('Dalam Watt');

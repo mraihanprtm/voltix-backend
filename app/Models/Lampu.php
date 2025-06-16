@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 // Jika Anda membuat Enum PHP untuk jenis lampu:
 // namespace App\Enums;
@@ -15,7 +16,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Lampu extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $table = 'lampu';
 
@@ -23,13 +24,28 @@ class Lampu extends Model
         'perangkat_id', // Foreign key ke tabel perangkats
         'jenis',        // Akan disimpan sebagai string (nama enum jenisLampu dari Android)
         'lumen',
+        'uuid',
     ];
 
     protected $casts = [
+        'id' => 'integer',
+        'perangkat_id' => 'integer',
         'lumen' => 'integer',
-        // Jika menggunakan Enum PHP 8.1+ untuk jenis:
-        // 'jenis' => \App\Enums\JenisLampuEnum::class,
+        'isDeleted' => 'boolean',
+        'lastModified' => 'timestamp',
     ];
+
+    protected $appends = ['isDeleted', 'lastModified'];
+
+    public function getIsDeletedAttribute()
+    {
+        return $this->deleted_at !== null;
+    }
+
+    public function getLastModifiedAttribute()
+    {
+        return $this->updated_at ? $this->updated_at->getTimestamp() * 1000 : null;
+    }
 
     /**
      * Mendefinisikan relasi "belongsTo" ke model Perangkat.

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 // Jika Anda membuat Enum PHP untuk jenis perangkat:
 // namespace App\Enums;
@@ -15,12 +16,13 @@ use Illuminate\Database\Eloquent\Model;
 
 class Perangkat extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $table = 'perangkat';
 
     protected $fillable = [
         'user_id', // Firebase UID pemilik (jika perangkat dimiliki langsung oleh user)
+        'uuid',
         'nama',
         'jumlah',
         'daya',
@@ -28,10 +30,12 @@ class Perangkat extends Model
     ];
 
     protected $casts = [
+        'id' => 'integer',
+        'user_id' => 'string', // Assuming user_id in DB is integer
         'jumlah' => 'integer',
         'daya' => 'integer',
-        // Jika menggunakan Enum PHP 8.1+ untuk jenis:
-        // 'jenis' => JenisPerangkatEnum::class,
+        'isDeleted' => 'boolean', // For the accessor
+        'lastModified' => 'timestamp', // To cast updated_at to a specific format if needed, usually not necessary for epoch
     ];
 
     /**
@@ -47,6 +51,34 @@ class Perangkat extends Model
     // }
 
     /**
+     * The accessors to append to the model's array form.
+     */
+    protected $appends = ['isDeleted', 'lastModified'];
+
+    /**
+     * Accessor for the 'isDeleted' attribute.
+     * Matches the Kotlin PerangkatEntity's isDeleted field.
+     *
+     * @return bool
+     */
+    public function getIsDeletedAttribute()
+    {
+        return $this->deleted_at !== null;
+    }
+
+    /**
+     * Accessor for the 'lastModified' attribute.
+     * Matches the Kotlin PerangkatEntity's lastModified field (expects milliseconds).
+     * Laravel's updated_at is a Carbon instance.
+     *
+     * @return int|null
+     */
+    public function getLastModifiedAttribute()
+    {
+        return $this->updated_at ? $this->updated_at->getTimestamp() * 1000 : null;
+    }
+
+    /**
      * Mendefinisikan relasi many-to-many ke model Ruangan melalui tabel pivot 'ruangan_perangkat'.
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
@@ -54,8 +86,8 @@ class Perangkat extends Model
     public function ruangan()
     {
         return $this->belongsToMany(Ruangan::class, 'ruangan_perangkat', 'perangkat_id', 'ruangan_id')
-                    ->withPivot('waktu_nyala', 'waktu_mati') // Untuk mengakses kolom tambahan di pivot
-                    ->withTimestamps(); // Jika tabel pivot Anda memiliki timestamps
+                    ->withPivot('waktu_nyala', 'waktu_mati'); // Untuk mengakses kolom tambahan di pivot
+                    // ->withTimestamps(); // Jika tabel pivot Anda memiliki timestamps
     }
 
     /**
@@ -68,5 +100,15 @@ class Perangkat extends Model
     {
         // Asumsi foreign key di tabel 'lampus' adalah 'perangkat_id'
         return $this->hasOne(Lampu::class, 'perangkat_id');
+    }
+
+    /**
+     * Get the route key for the model.
+     *
+     * @return string
+     */
+    public function getRouteKeyName()
+    {
+        return 'uuid';
     }
 }
